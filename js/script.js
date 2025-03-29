@@ -247,46 +247,73 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-
-    function calculateScore() {
+function calculateScore() {
         let totalScore = 0;
         let wordsFoundCount = 0;
         let wordsFoundList = [];
 
         bottles.forEach(bottleData => {
             if (bottleData.letters.length > 1) { // Need at least 2 letters for a word usually
-                // Read word top-down (reverse of array)
-                const word = bottleData.letters.map(l => l.char).reverse().join('');
-
-                if (window.dictionary.has(word)) {
+                // Get all the letters in the bottle (top-to-bottom)
+                const letters = bottleData.letters.map(l => l.char).reverse();
+                
+                // Find all valid words in the bottle
+                const wordsFound = findAllWordsInBottle(letters, bottleData.letters.slice().reverse());
+                
+                // Add all found words to our totals
+                wordsFound.forEach(({ word, wordScore, usedGolden }) => {
                     wordsFoundCount++;
                     wordsFoundList.push(word);
-                    let wordScore = 0;
-                    let usedGolden = false;
-
-                    // Calculate score for the word
-                    bottleData.letters.forEach(letterObj => {
-                        wordScore += letterObj.score;
-                        if (letterObj.isGolden) {
-                            usedGolden = true;
-                        }
-                    });
-
+                    
                     // Apply golden bonus if applicable
                     if (usedGolden) {
                         wordScore *= config.goldenLetterMultiplier;
                         console.log(`Word: ${word}, Base Score: ${wordScore / config.goldenLetterMultiplier}, Golden Bonus Applied! Final: ${wordScore}`);
                     } else {
-                         console.log(`Word: ${word}, Score: ${wordScore}`);
+                        console.log(`Word: ${word}, Score: ${wordScore}`);
                     }
-
+                    
                     totalScore += wordScore;
-                }
+                });
             }
         });
-
-        return { totalScore, wordsFoundCount, wordsFoundList };
-    }
+        
+        // Function to find all valid words in a bottle and calculate their scores
+        function findAllWordsInBottle(letters, letterObjects) {
+            const wordsFound = [];
+            const minWordLength = 2; // Minimum word length to consider
+            
+            // Try all possible word lengths
+            for (let wordLength = minWordLength; wordLength <= letters.length; wordLength++) {
+                // Try all possible starting positions
+                for (let startPos = 0; startPos <= letters.length - wordLength; startPos++) {
+                    // Get the consecutive letters for this word
+                    const wordLetters = letters.slice(startPos, startPos + wordLength);
+                    const word = wordLetters.join('');
+                    
+                    // Check if it's a valid word in our dictionary
+                    if (window.dictionary.has(word)) {
+                        // Get the corresponding letter objects for scoring
+                        const wordLetterObjects = letterObjects.slice(startPos, startPos + wordLength);
+                        
+                        // Calculate the score
+                        let wordScore = 0;
+                        let usedGolden = false;
+                        
+                        wordLetterObjects.forEach(letterObj => {
+                            wordScore += letterObj.score;
+                            if (letterObj.isGolden) {
+                                usedGolden = true;
+                            }
+                        });
+                        
+                        wordsFound.push({ word, wordScore, usedGolden });
+                    }
+                }
+            }
+            
+            return wordsFound;
+        }
 
     function handleSubmit() {
         const { totalScore, wordsFoundCount, wordsFoundList } = calculateScore();
