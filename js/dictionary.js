@@ -309,4 +309,5 @@ const wordList = [
 ];
 
 // Create a Set from the word list, all uppercase for case-insensitive matching
-const dictionary = new Set(wordList.map(word => word.toUpperCase()));
+window.dictionary = new Set(wordList);
+//const dictionary = new Set(wordList.map(word => word.toUpperCase()));
