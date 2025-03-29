@@ -72,62 +72,64 @@ body {
 }
 
 /* Bottle parts (scientific flask styling) */
-.bottle-neck { 
-    height: 40px; 
-    width: 40%; 
+.bottle-neck {
+    height: 50px; /* Increased height */
+    width: 30%; /* Narrower neck */
     margin: 0 auto;
-    background: linear-gradient(to bottom, transparent 0%, rgba(180, 210, 250, 0.4) 100%);
-    border-left: 2px solid #555;
-    border-right: 2px solid #555;
-    border-top: 2px solid #555;
+    background: linear-gradient(to bottom, transparent 0%, rgba(200, 225, 255, 0.5) 100%); /* Lighter gradient */
+    border-left: 1px solid #888; /* Thinner border */
+    border-right: 1px solid #888; /* Thinner border */
+    border-top: 1px solid #888; /* Thinner border */
     border-radius: 5px 5px 0 0;
     position: relative;
 }
 .bottle-neck::before {
     content: '';
     position: absolute;
-    top: -8px;
+    top: -12px; /* Adjust to sit nicely on the neck */
     left: 50%;
     transform: translateX(-50%);
-    width: 70%;
-    height: 8px;
-    background: #555;
-    border-radius: 5px 5px 0 0;
+    width: 60%; /* Slightly narrower top */
+    height: 12px; /* Increased height for a more pronounced lip */
+    background: #888;
+    border-radius: 8px 8px 0 0; /* More rounded top */
 }
-.bottle-body { 
-    flex-grow: 1; 
-    position: relative; 
-    background: rgba(180, 210, 250, 0.4);
-    border-left: 2px solid #555;
-    border-right: 2px solid #555;
-    width: 90%;
+.bottle-body {
+    flex-grow: 1;
+    position: relative;
+    background: linear-gradient(to bottom, rgba(200, 225, 255, 0.5) 0%, rgba(200, 225, 255, 0.8) 100%); /* Subtle gradient for volume */
+    border-left: 1px solid #888; /* Thinner border */
+    border-right: 1px solid #888; /* Thinner border */
+    width: 80%; /* Slightly narrower body */
     margin: 0 auto;
-    border-radius: 0 0 30% 30%;
+    border-radius: 0 0 40% 40%; /* More pronounced rounded bottom */
 }
-.bottle-base { 
-    height: 25px; 
-    width: 70%;
+.bottle-base {
+    height: 30px; /* Increased height for a more stable base */
+    width: 90%; /* Wider base */
     margin: 0 auto;
-    background: rgba(180, 210, 250, 0.4);
-    border: 2px solid #555;
+    background: linear-gradient(to top, rgba(200, 225, 255, 0.8) 0%, rgba(200, 225, 255, 0.5) 100%); /* Subtle gradient */
+    border-left: 1px solid #888; /* Thinner border */
+    border-right: 1px solid #888; /* Thinner border */
+    border-bottom: 1px solid #888; /* Add bottom border */
     border-top: none;
-    border-radius: 0 0 40% 40%;
+    border-radius: 0 0 50% 50%; /* More rounded base */
 }
 
 /* Flask measurement lines (scientific detail) */
 .bottle-body::before {
     content: '';
     position: absolute;
-    top: 10%;
+    top: 15%; /* Adjust position */
     left: 0;
     width: 100%;
-    height: 80%;
+    height: 70%; /* Adjust height */
     background: repeating-linear-gradient(
         to bottom,
         transparent,
-        transparent 30px,
-        rgba(85, 85, 85, 0.3) 30px,
-        rgba(85, 85, 85, 0.3) 31px
+        transparent 25px, /* Adjust spacing */
+        rgba(100, 100, 100, 0.2) 25px, /* Lighter color */
+        rgba(100, 100, 100, 0.2) 26px
     );
     z-index: -1;
 }
@@ -136,16 +138,16 @@ body {
 .bottle-body::after {
     content: '';
     position: absolute;
-    top: 10%;
-    left: 15%;
-    width: 25%;
-    height: 80%;
+    top: 15%; /* Adjust position */
+    left: 10%; /* Adjust position */
+    width: 15%; /* Adjust width */
+    height: 70%; /* Adjust height */
     background: repeating-linear-gradient(
         to bottom,
         transparent,
-        transparent 15px,
-        rgba(85, 85, 85, 0.5) 15px,
-        rgba(85, 85, 85, 0.5) 16px
+        transparent 12px, /* Adjust spacing */
+        rgba(100, 100, 100, 0.3) 12px, /* Lighter color */
+        rgba(100, 100, 100, 0.3) 13px
     );
     z-index: -1;
 }
