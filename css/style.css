@@ -233,6 +233,100 @@ body {
     color: red;
 }
 
+/* Overlay Styles */
+.overlay, .start-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    border-radius: 10px;
+}
+
+.overlay-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+}
+
+.name-entry {
+    margin: 20px 0;
+}
+
+#playerName {
+    padding: 8px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+#submitScoreButton, #playAgainButton, #startButton {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 10px;
+}
+
+#submitScoreButton:hover, #playAgainButton:hover, #startButton:hover {
+    background-color: #0056b3;
+}
+
+/* Leaderboard Styles */
+.leaderboard-content {
+    max-width: 600px;
+}
+
+.leaderboard-list {
+    margin: 20px 0;
+    border-top: 1px solid #eee;
+}
+
+.leaderboard-entry {
+    display: grid;
+    grid-template-columns: 40px 1fr 80px 80px 80px;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+.leaderboard-entry .rank {
+    font-weight: bold;
+    text-align: center;
+}
+
+.leaderboard-entry .score {
+    font-weight: bold;
+    text-align: right;
+}
+
+.leaderboard-entry .words, .leaderboard-entry .date {
+    text-align: right;
+    color: #666;
+    font-size: 0.9em;
+}
+
+/* Timer area styling */
+#timerArea {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-top: 10px;
+    color: #333;
+}
+
 /* Responsive */
 @media (max-width: 480px) {
     .bottle {
@@ -242,5 +336,25 @@ body {
     }
     .bottles-area {
         justify-content: space-evenly;
+    }
+    
+    .leaderboard-entry {
+        grid-template-columns: 30px 1fr 60px;
+        grid-template-areas:
+            "rank name score"
+            "empty words date";
+    }
+    
+    .leaderboard-entry .rank { grid-area: rank; }
+    .leaderboard-entry .name { grid-area: name; }
+    .leaderboard-entry .score { grid-area: score; }
+    .leaderboard-entry .words { 
+        grid-area: words;
+        text-align: left;
+        padding-left: 40px;
+    }
+    .leaderboard-entry .date { 
+        grid-area: date; 
+        text-align: right;
     }
 }

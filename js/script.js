@@ -19,8 +19,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let draggedBottleIndex = null;
     let goldenLetterId = null; // Unique ID of the one golden letter instance
     let gameTimer = null; // Timer interval
-    let gameTimeRemaining = config.gameTime; // Game time in seconds
+    let gameTimeRemaining = config.gameTime || 60; // Game time in seconds (default 60 if not set in config)
     let isGameActive = false;
+    let currentScore = 0;
+    let wordsCreated = []; // Track words created during gameplay
 
     function generateUUID() { // Simple unique ID for letters
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -36,6 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
         messageArea.textContent = '';
         messageArea.className = ''; // Reset message style
         draggedBottleIndex = null;
+        currentScore = 0;
+        wordsCreated = [];
 
         // Use generated or fixed initial letters
         // const initialDistribution = config.initialLetters;
@@ -334,8 +338,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleSubmit() {
         const { totalScore, wordsFoundCount, wordsFoundList } = calculateScore();
+        currentScore = totalScore; // Update the current score
         scoreArea.textContent = `Score: ${totalScore}`;
         if (wordsFoundCount > 0) {
+            // Add any new words to the wordsCreated array
+            wordsFoundList.forEach(word => {
+                if (!wordsCreated.includes(word)) {
+                    wordsCreated.push(word);
+                }
+            });
             setMessage(`Found ${wordsFoundCount} words: ${wordsFoundList.join(', ')}!`);
             messageArea.className = 'success'; // Optional styling
         } else {
@@ -344,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-     function setMessage(msg, isError = false) {
+    function setMessage(msg, isError = false) {
         messageArea.textContent = msg;
         if (isError) {
             messageArea.className = 'error';
@@ -360,12 +371,162 @@ document.addEventListener('DOMContentLoaded', () => {
          }, 3000); // Clear after 3 seconds
     }
 
+    // Game timer functions
+    function startGameTimer() {
+        isGameActive = true;
+        gameTimeRemaining = config.gameTime || 60; // Reset to starting time
+        updateTimerDisplay();
+        
+        gameTimer = setInterval(() => {
+            gameTimeRemaining--;
+            updateTimerDisplay();
+            
+            if (gameTimeRemaining <= 0) {
+                endGame();
+            }
+        }, 1000);
+    }
+    
+    function updateTimerDisplay() {
+        const minutes = Math.floor(gameTimeRemaining / 60);
+        const seconds = gameTimeRemaining % 60;
+        timerArea.textContent = `Time: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    function endGame() {
+        clearInterval(gameTimer);
+        isGameActive = false;
+        
+        // Calculate final score
+        const { totalScore } = calculateScore();
+        currentScore = totalScore;
+        
+        // Show leaderboard entry
+        finalScoreSpan.textContent = totalScore;
+        leaderboardEntryOverlay.style.display = 'flex';
+    }
+
+    // Firebase Firestore functions
+    async function saveScoreToLeaderboard(playerName, score) {
+        try {
+            // Access Firestore modules through window object
+            const { collection, addDoc } = window.firestoreModules;
+            const db = window.db;
+            
+            // Add score to Firestore
+            const docRef = await addDoc(collection(db, "highScores"), {
+                name: playerName,
+                score: score,
+                wordsCreated: wordsCreated.length,
+                wordsList: wordsCreated,
+                timestamp: new Date().toISOString()
+            });
+            
+            console.log("Score saved with ID: ", docRef.id);
+            return true;
+        } catch (error) {
+            console.error("Error adding score: ", error);
+            return false;
+        }
+    }
+    
+    async function loadLeaderboard() {
+        try {
+            // Access Firestore modules through window object
+            const { collection, getDocs, query, orderBy, limit } = window.firestoreModules;
+            const db = window.db;
+            
+            // Get top 10 scores
+            const q = query(
+                collection(db, "highScores"), 
+                orderBy("score", "desc"), 
+                limit(10)
+            );
+            
+            const querySnapshot = await getDocs(q);
+            const leaderboardData = [];
+            
+            querySnapshot.forEach((doc) => {
+                leaderboardData.push({
+                    id: doc.id,
+                    ...doc.data()
+                });
+            });
+            
+            return leaderboardData;
+        } catch (error) {
+            console.error("Error getting leaderboard: ", error);
+            return [];
+        }
+    }
+    
+    function displayLeaderboard(leaderboardData) {
+        leaderboardList.innerHTML = '';
+        
+        if (leaderboardData.length === 0) {
+            leaderboardList.innerHTML = '<div class="leaderboard-entry">No scores yet! Be the first to submit.</div>';
+            return;
+        }
+        
+        leaderboardData.forEach((entry, index) => {
+            const entryElement = document.createElement('div');
+            entryElement.classList.add('leaderboard-entry');
+            
+            // Format date
+            const date = new Date(entry.timestamp);
+            const dateStr = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+            
+            entryElement.innerHTML = `
+                <div class="rank">${index + 1}</div>
+                <div class="name">${entry.name}</div>
+                <div class="score">${entry.score}</div>
+                <div class="words">${entry.wordsCreated || 0} words</div>
+                <div class="date">${dateStr}</div>
+            `;
+            
+            leaderboardList.appendChild(entryElement);
+        });
+    }
 
     // Event Listeners
     submitButton.addEventListener('click', handleSubmit);
     resetButton.addEventListener('click', initializeGame);
+    
+    // Start button event listener
+    startButton.addEventListener('click', () => {
+        startOverlay.style.display = 'none';
+        initializeGame();
+        startGameTimer();
+    });
+    
+    // Submit score button event listener
+    submitScoreButton.addEventListener('click', async () => {
+        const playerName = playerNameInput.value.trim();
+        if (playerName) {
+            const success = await saveScoreToLeaderboard(playerName, currentScore);
+            
+            if (success) {
+                leaderboardEntryOverlay.style.display = 'none';
+                
+                // Load and display leaderboard
+                const leaderboardData = await loadLeaderboard();
+                displayLeaderboard(leaderboardData);
+                leaderboardDisplayOverlay.style.display = 'flex';
+            } else {
+                alert("Error saving score. Please try again.");
+            }
+        } else {
+            alert("Please enter your name before submitting.");
+        }
+    });
+    
+    // Play again button event listener
+    playAgainButton.addEventListener('click', () => {
+        leaderboardDisplayOverlay.style.display = 'none';
+        initializeGame();
+        startGameTimer();
+    });
 
-
-    // --- Initial Game Setup ---
-    initializeGame();
+    // Show start overlay on initial load
+    startOverlay.style.display = 'flex';
 });
