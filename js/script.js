@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Read word top-down (reverse of array)
                 const word = bottleData.letters.map(l => l.char).reverse().join('');
 
-                if (dictionary.has(word)) {
+                if (window.dictionary.has(word)) {
                     wordsFoundCount++;
                     wordsFoundList.push(word);
                     let wordScore = 0;

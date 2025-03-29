@@ -1,7 +1,6 @@
 // Enhanced word list for word games
 const wordList = [
    // Enhanced word list for word games - common words up to 6 letters only
-const wordList = [
     // 2-letter words (very common)
     "AM", "AN", "AS", "AT", "BE", "BY", "DO", "GO", "HE", "HI", "IF", "IN", 
     "IS", "IT", "ME", "MY", "NO", "OF", "OH", "ON", "OR", "SO", "TO", "UP", 
