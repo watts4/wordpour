@@ -4,10 +4,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetButton = document.getElementById('resetButton');
     const scoreArea = document.getElementById('scoreArea');
     const messageArea = document.getElementById('messageArea');
+    const timerArea = document.getElementById('timerArea');
+    const startOverlay = document.getElementById('startOverlay');
+    const startButton = document.getElementById('startButton');
+    const leaderboardEntryOverlay = document.getElementById('leaderboardEntryOverlay');
+    const leaderboardDisplayOverlay = document.getElementById('leaderboardDisplayOverlay');
+    const finalScoreSpan = document.getElementById('finalScore');
+    const playerNameInput = document.getElementById('playerName');
+    const submitScoreButton = document.getElementById('submitScoreButton');
+    const leaderboardList = document.getElementById('leaderboardList');
+    const playAgainButton = document.getElementById('playAgainButton');
 
     let bottles = []; // Array to hold bottle data { id: number, letters: [{char: 'A', score: 1, id: 'uuid', isGolden: false}, ...], element: DOMElement }
     let draggedBottleIndex = null;
     let goldenLetterId = null; // Unique ID of the one golden letter instance
+    let gameTimer = null; // Timer interval
+    let gameTimeRemaining = config.gameTime; // Game time in seconds
+    let isGameActive = false;
 
     function generateUUID() { // Simple unique ID for letters
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
