@@ -241,7 +241,7 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.8);
-    display: none;
+    display: none; /* Hidden by default, will be shown via JS */
     justify-content: center;
     align-items: center;
     z-index: 100;
@@ -356,5 +356,17 @@ body {
     .leaderboard-entry .date { 
         grid-area: date; 
         text-align: right;
+    }
+}
+
+/* Make sure overlays are properly styled on mobile */
+@media (max-width: 480px) {
+    .overlay, .start-overlay {
+        padding: 10px;
+    }
+    
+    .overlay-content {
+        width: 95%;
+        padding: 15px;
     }
 }

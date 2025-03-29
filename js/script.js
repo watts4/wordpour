@@ -40,6 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
         draggedBottleIndex = null;
         currentScore = 0;
         wordsCreated = [];
+        
+        // Reset timer display
+        gameTimeRemaining = config.gameTime || 60;
+        updateTimerDisplay();
 
         // Use generated or fixed initial letters
         // const initialDistribution = config.initialLetters;
@@ -373,6 +377,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Game timer functions
     function startGameTimer() {
+        // Clear any existing timer
+        if (gameTimer) {
+            clearInterval(gameTimer);
+        }
+        
         isGameActive = true;
         gameTimeRemaining = config.gameTime || 60; // Reset to starting time
         updateTimerDisplay();
@@ -413,11 +422,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const { collection, addDoc } = window.firestoreModules;
             const db = window.db;
             
-            // Add score to Firestore
+            // Add score to Firestore - matching the security rules
             const docRef = await addDoc(collection(db, "highScores"), {
                 name: playerName,
                 score: score,
-                wordsCreated: wordsCreated.length,
+                wordsCreated: wordsCreated.length, // This matches the 'time' field in your security rules
                 wordsList: wordsCreated,
                 timestamp: new Date().toISOString()
             });
@@ -494,7 +503,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Start button event listener
     startButton.addEventListener('click', () => {
+        // Hide the start overlay
         startOverlay.style.display = 'none';
+        
+        // Make sure all other overlays are also hidden
+        leaderboardEntryOverlay.style.display = 'none';
+        leaderboardDisplayOverlay.style.display = 'none';
+        
+        // Initialize and start the game
         initializeGame();
         startGameTimer();
     });
@@ -522,11 +538,18 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Play again button event listener
     playAgainButton.addEventListener('click', () => {
+        // Hide all overlays
+        startOverlay.style.display = 'none';
+        leaderboardEntryOverlay.style.display = 'none';
         leaderboardDisplayOverlay.style.display = 'none';
+        
+        // Reset and start the game
         initializeGame();
         startGameTimer();
     });
 
-    // Show start overlay on initial load
-    startOverlay.style.display = 'flex';
+    // Initialize overlay states
+    startOverlay.style.display = 'flex'; // Only show the start overlay initially
+    leaderboardEntryOverlay.style.display = 'none';
+    leaderboardDisplayOverlay.style.display = 'none';
 });
