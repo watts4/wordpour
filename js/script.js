@@ -247,7 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-function calculateScore() {
+
+    function calculateScore() {
         let totalScore = 0;
         let wordsFoundCount = 0;
         let wordsFoundList = [];
@@ -278,42 +279,45 @@ function calculateScore() {
             }
         });
         
-        // Function to find all valid words in a bottle and calculate their scores
-        function findAllWordsInBottle(letters, letterObjects) {
-            const wordsFound = [];
-            const minWordLength = 2; // Minimum word length to consider
-            
-            // Try all possible word lengths
-            for (let wordLength = minWordLength; wordLength <= letters.length; wordLength++) {
-                // Try all possible starting positions
-                for (let startPos = 0; startPos <= letters.length - wordLength; startPos++) {
-                    // Get the consecutive letters for this word
-                    const wordLetters = letters.slice(startPos, startPos + wordLength);
-                    const word = wordLetters.join('');
+        return { totalScore, wordsFoundCount, wordsFoundList };
+    }
+    
+    // Function to find all valid words in a bottle and calculate their scores
+    function findAllWordsInBottle(letters, letterObjects) {
+        const wordsFound = [];
+        const minWordLength = 2; // Minimum word length to consider
+        
+        // Try all possible word lengths
+        for (let wordLength = minWordLength; wordLength <= letters.length; wordLength++) {
+            // Try all possible starting positions
+            for (let startPos = 0; startPos <= letters.length - wordLength; startPos++) {
+                // Get the consecutive letters for this word
+                const wordLetters = letters.slice(startPos, startPos + wordLength);
+                const word = wordLetters.join('');
+                
+                // Check if it's a valid word in our dictionary
+                if (window.dictionary.has(word)) {
+                    // Get the corresponding letter objects for scoring
+                    const wordLetterObjects = letterObjects.slice(startPos, startPos + wordLength);
                     
-                    // Check if it's a valid word in our dictionary
-                    if (window.dictionary.has(word)) {
-                        // Get the corresponding letter objects for scoring
-                        const wordLetterObjects = letterObjects.slice(startPos, startPos + wordLength);
-                        
-                        // Calculate the score
-                        let wordScore = 0;
-                        let usedGolden = false;
-                        
-                        wordLetterObjects.forEach(letterObj => {
-                            wordScore += letterObj.score;
-                            if (letterObj.isGolden) {
-                                usedGolden = true;
-                            }
-                        });
-                        
-                        wordsFound.push({ word, wordScore, usedGolden });
-                    }
+                    // Calculate the score
+                    let wordScore = 0;
+                    let usedGolden = false;
+                    
+                    wordLetterObjects.forEach(letterObj => {
+                        wordScore += letterObj.score;
+                        if (letterObj.isGolden) {
+                            usedGolden = true;
+                        }
+                    });
+                    
+                    wordsFound.push({ word, wordScore, usedGolden });
                 }
             }
-            
-            return wordsFound;
         }
+        
+        return wordsFound;
+    }
 
     function handleSubmit() {
         const { totalScore, wordsFoundCount, wordsFoundList } = calculateScore();
