@@ -637,39 +637,35 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             startLeaderboardContainer.appendChild(headerRow);
             
-            // Display top players similar to main leaderboard but simplified
-            if (leaderboardData.length >= 3) {
-                const topThree = leaderboardData.slice(0, 3);
+            // Display only top player in featured style
+            if (leaderboardData.length >= 1) {
+                const topPlayer = leaderboardData[0];
                 const topPlayersSection = document.createElement('div');
                 topPlayersSection.classList.add('top-players');
                 
-                topThree.forEach((player, index) => {
-                    const rank = index + 1;
-                    const playerElement = document.createElement('div');
-                    playerElement.classList.add('top-player', `top-player-${rank}`);
-                    
-                    // Get player's first initial
-                    const initial = (player.name || 'A').charAt(0).toUpperCase();
-                    
-                    playerElement.innerHTML = `
-                        <div class="top-player-rank">${rank}</div>
-                        <div class="top-player-avatar">
-                            <div class="player-initial">${initial}</div>
-                        </div>
-                        <div class="top-player-name">${player.name}</div>
-                        <div class="top-player-username">${player.wordsCreated || 0} words</div>
-                        <div class="top-player-score">${player.score}</div>
-                    `;
-                    
-                    topPlayersSection.appendChild(playerElement);
-                });
+                const playerElement = document.createElement('div');
+                playerElement.classList.add('top-player', 'top-player-1');
                 
+                // Get player's first initial
+                const initial = (topPlayer.name || 'A').charAt(0).toUpperCase();
+                
+                playerElement.innerHTML = `
+                    <div class="top-player-rank">1</div>
+                    <div class="top-player-avatar">
+                        <div class="player-initial">${initial}</div>
+                    </div>
+                    <div class="top-player-name">${topPlayer.name}</div>
+                    <div class="top-player-username">${topPlayer.wordsCreated || 0} words</div>
+                    <div class="top-player-score">${topPlayer.score}</div>
+                `;
+                
+                topPlayersSection.appendChild(playerElement);
                 startLeaderboardContainer.appendChild(topPlayersSection);
                 
-                // Add 4th and 5th place in regular format
-                const remainingPlayers = leaderboardData.slice(3, 5);
+                // Add 2nd to 5th place in regular format
+                const remainingPlayers = leaderboardData.slice(1, 5);
                 remainingPlayers.forEach((entry, index) => {
-                    const rank = index + 4;
+                    const rank = index + 2;
                     const entryElement = document.createElement('div');
                     entryElement.className = 'leaderboard-entry';
                     
@@ -699,31 +695,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     startLeaderboardContainer.appendChild(entryElement);
                 });
             } else {
-                // If less than 3 players, show in regular format
-                leaderboardData.forEach((entry, index) => {
-                    const rank = index + 1;
-                    const entryElement = document.createElement('div');
-                    entryElement.className = 'leaderboard-entry';
-                    
-                    // Get initial for avatar
-                    const initial = (entry.name || 'A').charAt(0).toUpperCase();
-                    
-                    entryElement.innerHTML = `
-                        <div class="rank">
-                            <svg class="rank-trophy" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M5,16 L3,16 L3,8 C3,6.9 3.9,6 5,6 L19,6 C20.1,6 21,6.9 21,8 L21,16 L19,16 L19,14 L5,14 L5,16 Z M19,8 L5,8 L5,12 L19,12 L19,8 Z M12,19 L9,16 L15,16 L12,19 Z"></path>
-                            </svg>
-                            ${rank}
-                        </div>
-                        <div class="name">
-                            <div class="player-avatar-small">${initial}</div>
-                            ${entry.name}
-                        </div>
-                        <div class="score">${entry.score}</div>
-                    `;
-                    
-                    startLeaderboardContainer.appendChild(entryElement);
-                });
+                // If no players, we've already handled this with empty message above
             }
         }
         
