@@ -449,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const q = query(
                 collection(db, "highScores"), 
                 orderBy("score", "desc"), 
-                limit(10)
+                limit(5)
             );
             
             const querySnapshot = await getDocs(q);
@@ -469,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function displayLeaderboard(leaderboardData) {
+    async function displayLeaderboard(leaderboardData) {
         leaderboardList.innerHTML = '';
         
         if (leaderboardData.length === 0) {
@@ -477,23 +477,263 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        leaderboardData.forEach((entry, index) => {
+          // Add the Leaderboard title
+        const titleElement = document.createElement('h2');
+        titleElement.textContent = 'Leaderboard';
+        titleElement.style.textAlign = 'center';
+        titleElement.style.marginBottom = '20px';
+        titleElement.style.color = 'white';
+        leaderboardList.appendChild(titleElement);
+        
+        // Add the tabs
+        const tabsContainer = document.createElement('div');
+        tabsContainer.className = 'leaderboard-tabs';
+        tabsContainer.innerHTML = `
+            <button class="leaderboard-tab active">All Time</button>
+            <button class="leaderboard-tab">Today</button>
+        `;
+        leaderboardList.appendChild(tabsContainer);
+       
+		
+		// Create leaderboard header
+        const headerElement = document.createElement('div');
+        headerElement.classList.add('leaderboard-list-header');
+        headerElement.innerHTML = `
+            <div>Rank</div>
+            <div>Player</div>
+            <div>Score</div>
+        `;
+        leaderboardList.appendChild(headerElement);
+        
+        // Create top 3 players section if there are at least 3 entries
+        if (leaderboardData.length >= 3) {
+            const topPlayersSection = document.createElement('div');
+            topPlayersSection.classList.add('top-players');
+            
+            // Get top 3 players
+            const topPlayers = leaderboardData.slice(0, 3);
+            
+            topPlayers.forEach((player, index) => {
+                const rank = index + 1;
+                const playerElement = document.createElement('div');
+                playerElement.classList.add('top-player', `top-player-${rank}`);
+                
+                // Get player's first initial to display in avatar
+                const initial = (player.name || 'A').charAt(0).toUpperCase();
+                
+                playerElement.innerHTML = `
+                    <div class="top-player-rank">${rank}</div>
+                    <div class="top-player-avatar">
+                        <div class="player-initial">${initial}</div>
+                    </div>
+                    <div class="top-player-name">${player.name}</div>
+                    <div class="top-player-username">${player.wordsCreated || 0} words</div>
+                    <div class="top-player-score">${player.score}</div>
+                `;
+                
+                topPlayersSection.appendChild(playerElement);
+            });
+            
+            leaderboardList.appendChild(topPlayersSection);
+            
+            // Add the rest of the entries starting from 4th place
+            leaderboardData.slice(3).forEach((entry, index) => {
+                const rank = index + 4;
+                addLeaderboardEntry(entry, rank);
+            });
+        } else {
+            // If less than 3 entries, just show all entries in regular format
+            leaderboardData.forEach((entry, index) => {
+                addLeaderboardEntry(entry, index + 1);
+            });
+        }
+        
+        function addLeaderboardEntry(entry, rank) {
             const entryElement = document.createElement('div');
             entryElement.classList.add('leaderboard-entry');
+            
+            // Calculate the width of the background bar based on score
+            // Use the highest score as 100% and scale others accordingly
+            const maxScore = leaderboardData[0].score;
+            const widthPercentage = Math.max(5, Math.round((entry.score / maxScore) * 100));
+            
+            // Get initial for avatar
+            const initial = (entry.name || 'A').charAt(0).toUpperCase();
             
             // Format date
             const date = new Date(entry.timestamp);
             const dateStr = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
             
             entryElement.innerHTML = `
-                <div class="rank">${index + 1}</div>
-                <div class="name">${entry.name}</div>
+                <div class="rank">
+                    <svg class="rank-trophy" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M5,16 L3,16 L3,8 C3,6.9 3.9,6 5,6 L19,6 C20.1,6 21,6.9 21,8 L21,16 L19,16 L19,14 L5,14 L5,16 Z M19,8 L5,8 L5,12 L19,12 L19,8 Z M12,19 L9,16 L15,16 L12,19 Z"></path>
+                    </svg>
+                    ${rank}
+                </div>
+                <div class="name">
+                    <div class="player-avatar-small">${initial}</div>
+                    ${entry.name}
+                </div>
                 <div class="score">${entry.score}</div>
                 <div class="words">${entry.wordsCreated || 0} words</div>
                 <div class="date">${dateStr}</div>
             `;
             
+            // Set the width of the background bar
+            entryElement.style.setProperty('--score-width', `${widthPercentage}%`);
+            
             leaderboardList.appendChild(entryElement);
+        }
+    }
+    
+    async function loadStartScreenLeaderboard() {
+        const leaderboardData = await loadLeaderboard();
+        // Create a leaderboard container in the start overlay
+        const startOverlayContent = document.querySelector('#startOverlay .overlay-content');
+        
+        // Create leaderboard container if it doesn't exist yet
+        let startLeaderboardContainer = document.getElementById('startLeaderboardContainer');
+        if (!startLeaderboardContainer) {
+            startLeaderboardContainer = document.createElement('div');
+            startLeaderboardContainer.id = 'startLeaderboardContainer';
+            startLeaderboardContainer.className = 'leaderboard-list';
+            startLeaderboardContainer.style.marginTop = '20px';
+            
+            // Add a title for the leaderboard
+            const leaderboardTitle = document.createElement('h3');
+            leaderboardTitle.textContent = 'Top Players';
+            startLeaderboardContainer.appendChild(leaderboardTitle);
+            
+            startOverlayContent.appendChild(startLeaderboardContainer);
+        } else {
+            // Clear existing entries if container already exists
+            startLeaderboardContainer.innerHTML = '<h3>Top Players</h3>';
+        }
+        
+        // Add tab buttons
+        const tabsContainer = document.createElement('div');
+        tabsContainer.className = 'leaderboard-tabs';
+        tabsContainer.innerHTML = `
+            <button class="leaderboard-tab active">All Time</button>
+            <button class="leaderboard-tab">Today</button>
+        `;
+        startLeaderboardContainer.appendChild(tabsContainer);
+        
+        // Display leaderboard data
+        if (leaderboardData.length === 0) {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.className = 'leaderboard-entry';
+            emptyMessage.textContent = 'No scores yet! Be the first to submit.';
+            startLeaderboardContainer.appendChild(emptyMessage);
+        } else {
+            // Add header row
+            const headerRow = document.createElement('div');
+            headerRow.className = 'leaderboard-list-header';
+            headerRow.innerHTML = `
+                <div>Rank</div>
+                <div>Player</div>
+                <div>Score</div>
+            `;
+            startLeaderboardContainer.appendChild(headerRow);
+            
+            // Display top players similar to main leaderboard but simplified
+            if (leaderboardData.length >= 3) {
+                const topThree = leaderboardData.slice(0, 3);
+                const topPlayersSection = document.createElement('div');
+                topPlayersSection.classList.add('top-players');
+                
+                topThree.forEach((player, index) => {
+                    const rank = index + 1;
+                    const playerElement = document.createElement('div');
+                    playerElement.classList.add('top-player', `top-player-${rank}`);
+                    
+                    // Get player's first initial
+                    const initial = (player.name || 'A').charAt(0).toUpperCase();
+                    
+                    playerElement.innerHTML = `
+                        <div class="top-player-rank">${rank}</div>
+                        <div class="top-player-avatar">
+                            <div class="player-initial">${initial}</div>
+                        </div>
+                        <div class="top-player-name">${player.name}</div>
+                        <div class="top-player-username">${player.wordsCreated || 0} words</div>
+                        <div class="top-player-score">${player.score}</div>
+                    `;
+                    
+                    topPlayersSection.appendChild(playerElement);
+                });
+                
+                startLeaderboardContainer.appendChild(topPlayersSection);
+                
+                // Add 4th and 5th place in regular format
+                const remainingPlayers = leaderboardData.slice(3, 5);
+                remainingPlayers.forEach((entry, index) => {
+                    const rank = index + 4;
+                    const entryElement = document.createElement('div');
+                    entryElement.className = 'leaderboard-entry';
+                    
+                    // Calculate width for visual bar
+                    const maxScore = leaderboardData[0].score;
+                    const widthPercentage = Math.max(5, Math.round((entry.score / maxScore) * 100));
+                    
+                    // Get initial for avatar
+                    const initial = (entry.name || 'A').charAt(0).toUpperCase();
+                    
+                    entryElement.innerHTML = `
+                        <div class="rank">
+                            <svg class="rank-trophy" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M5,16 L3,16 L3,8 C3,6.9 3.9,6 5,6 L19,6 C20.1,6 21,6.9 21,8 L21,16 L19,16 L19,14 L5,14 L5,16 Z M19,8 L5,8 L5,12 L19,12 L19,8 Z M12,19 L9,16 L15,16 L12,19 Z"></path>
+                            </svg>
+                            ${rank}
+                        </div>
+                        <div class="name">
+                            <div class="player-avatar-small">${initial}</div>
+                            ${entry.name}
+                        </div>
+                        <div class="score">${entry.score}</div>
+                    `;
+                    
+                    entryElement.style.setProperty('--score-width', `${widthPercentage}%`);
+                    
+                    startLeaderboardContainer.appendChild(entryElement);
+                });
+            } else {
+                // If less than 3 players, show in regular format
+                leaderboardData.forEach((entry, index) => {
+                    const rank = index + 1;
+                    const entryElement = document.createElement('div');
+                    entryElement.className = 'leaderboard-entry';
+                    
+                    // Get initial for avatar
+                    const initial = (entry.name || 'A').charAt(0).toUpperCase();
+                    
+                    entryElement.innerHTML = `
+                        <div class="rank">
+                            <svg class="rank-trophy" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M5,16 L3,16 L3,8 C3,6.9 3.9,6 5,6 L19,6 C20.1,6 21,6.9 21,8 L21,16 L19,16 L19,14 L5,14 L5,16 Z M19,8 L5,8 L5,12 L19,12 L19,8 Z M12,19 L9,16 L15,16 L12,19 Z"></path>
+                            </svg>
+                            ${rank}
+                        </div>
+                        <div class="name">
+                            <div class="player-avatar-small">${initial}</div>
+                            ${entry.name}
+                        </div>
+                        <div class="score">${entry.score}</div>
+                    `;
+                    
+                    startLeaderboardContainer.appendChild(entryElement);
+                });
+            }
+        }
+        
+        // Add event listeners for tabs (they don't actually filter in this implementation)
+        const tabButtons = startLeaderboardContainer.querySelectorAll('.leaderboard-tab');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+            });
         });
     }
 
@@ -524,10 +764,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (success) {
                 leaderboardEntryOverlay.style.display = 'none';
                 
-                // Load and display leaderboard
+                // Load and display leaderboard in the usual leaderboard overlay
                 const leaderboardData = await loadLeaderboard();
-                displayLeaderboard(leaderboardData);
+                await displayLeaderboard(leaderboardData);
                 leaderboardDisplayOverlay.style.display = 'flex';
+                
+                // Also update the start screen leaderboard for next time
+                await loadStartScreenLeaderboard();
             } else {
                 alert("Error saving score. Please try again.");
             }
@@ -547,9 +790,12 @@ document.addEventListener('DOMContentLoaded', () => {
         initializeGame();
         startGameTimer();
     });
-
+    
     // Initialize overlay states
     startOverlay.style.display = 'flex'; // Only show the start overlay initially
     leaderboardEntryOverlay.style.display = 'none';
     leaderboardDisplayOverlay.style.display = 'none';
+    
+    // Load leaderboard when page loads
+    loadStartScreenLeaderboard();
 });
