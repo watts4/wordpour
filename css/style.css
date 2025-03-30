@@ -20,7 +20,26 @@ body {
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
     position: relative; /* For positioning overlays */
 }
+/* Footer Styling */
+.game-footer {
+    margin-top: 25px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    text-align: center;
+    font-size: 0.9em;
+    color: #666;
+}
 
+.game-footer a {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.game-footer a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
 /* Bottles Area */
 .bottles-area {
     display: flex;
