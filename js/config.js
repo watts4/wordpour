@@ -1,51 +1,109 @@
+/**
+ * Game Configuration for WordPour
+ */
+
 const config = {
-    bottleCount: 4,
-    maxBottleHeight: 8, // Max letters per bottle
-    gameTime: 60, // Game time in seconds
+    // Flask settings
+    flaskCount: 4,
+    maxFlaskHeight: 8,
+
+    // Game timing (in seconds)
+    blitzTime: 60,
+    challengeTime: 90,
+
+    // Scoring
     scrabbleScores: {
         'A': 1, 'B': 3, 'C': 3, 'D': 2, 'E': 1, 'F': 4, 'G': 2, 'H': 4,
         'I': 1, 'J': 8, 'K': 5, 'L': 1, 'M': 3, 'N': 1, 'O': 1, 'P': 3,
         'Q': 10, 'R': 1, 'S': 1, 'T': 1, 'U': 1, 'V': 4, 'W': 4, 'X': 8,
         'Y': 4, 'Z': 10
     },
+
+    // Bonuses
     goldenLetterMultiplier: 2,
-    // Example starting letters (adjust distribution for balance)
-    // Letters are bottom-to-top in the array
-    initialLetters: [
-        ['O', 'C', 'B', 'E'],
-        ['I', 'E', 'E', 'R', 'D', 'B'],
-        ['T', 'Z', 'U', 'O', 'D', 'E', 'S', 'A', 'A'],
-        [] // The empty bottle
+    rainbowLetterChance: 0.05, // 5% chance for a rainbow letter
+
+    // Word length bonuses
+    wordLengthBonus: {
+        5: 1.5,  // 50% bonus for 5-letter words
+        6: 2.0,  // 100% bonus for 6-letter words
+        7: 2.5,  // 150% bonus for 7-letter words
+        8: 3.0,  // 200% bonus for 8+ letter words
+    },
+
+    // Combo settings
+    comboTimeWindow: 5000, // 5 seconds to keep combo alive
+    comboMultipliers: [1, 1.5, 2, 2.5, 3, 4, 5], // Multipliers for combo levels
+
+    // Challenge mode levels
+    challengeLevels: [
+        { target: 50, letters: 16 },
+        { target: 80, letters: 18 },
+        { target: 120, letters: 20 },
+        { target: 180, letters: 22 },
+        { target: 250, letters: 24 },
+        { target: 350, letters: 26 },
+        { target: 500, letters: 28 },
+        { target: 700, letters: 30 },
+        { target: 1000, letters: 32 },
+        { target: 1500, letters: 34 },
     ],
-     // Or a function to generate random letters
-    generateInitialLetters: function() {
-        const letterPool = "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ";
-        const totalLetters = 20; // Adjust total letters
-        let poolArr = letterPool.split('');
-        let distributedLetters = [[], [], [], []];
-        let allLetters = [];
 
-        // Create initial pool
-        for (let i = 0; i < totalLetters; i++) {
-            const randomIndex = Math.floor(Math.random() * poolArr.length);
-            allLetters.push(poolArr.splice(randomIndex, 1)[0]);
+    // Power-ups (initial counts)
+    powerups: {
+        shuffle: 2,
+        hint: 3,
+        freeze: 1,
+        undo: Infinity
+    },
+
+    // Letter distribution (based on Scrabble but adjusted for gameplay)
+    letterPool: "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ",
+
+    // Generate initial letters
+    generateLetters: function(count = 20) {
+        const pool = this.letterPool.split('');
+        const letters = [];
+
+        for (let i = 0; i < count && pool.length > 0; i++) {
+            const index = Math.floor(Math.random() * pool.length);
+            letters.push(pool.splice(index, 1)[0]);
         }
 
-        // Distribute to first 3 bottles somewhat evenly
-        let bottleIndex = 0;
-        while(allLetters.length > 0) {
-            if (distributedLetters[bottleIndex % 3].length < this.maxBottleHeight -1) { // Leave space
-                 distributedLetters[bottleIndex % 3].push(allLetters.pop());
-            } else {
-                 // If a bottle is near full, try the next one, or discard if all full (unlikely with good numbers)
-                 allLetters.pop(); // Simplistic handling: discard if no space
+        return letters;
+    },
+
+    // Distribute letters to flasks
+    distributeLetters: function(letters, flaskCount = 4) {
+        const flasks = Array.from({ length: flaskCount }, () => []);
+
+        // Leave one flask empty for pouring
+        const targetFlasks = flaskCount - 1;
+
+        letters.forEach((letter, index) => {
+            const flaskIndex = index % targetFlasks;
+            if (flasks[flaskIndex].length < this.maxFlaskHeight) {
+                flasks[flaskIndex].push(letter);
             }
-           bottleIndex++;
-        }
-        return distributedLetters;
+        });
+
+        return flasks;
+    },
+
+    // Generate initial game state
+    generateInitialState: function(letterCount = 20) {
+        const letters = this.generateLetters(letterCount);
+        return this.distributeLetters(letters, this.flaskCount);
+    },
+
+    // Result messages based on score
+    getResultMessage: function(score, wordCount) {
+        if (score >= 500) return { emoji: '🏆', title: 'Legendary!' };
+        if (score >= 300) return { emoji: '🌟', title: 'Amazing!' };
+        if (score >= 200) return { emoji: '🔥', title: 'On Fire!' };
+        if (score >= 100) return { emoji: '✨', title: 'Great Job!' };
+        if (score >= 50) return { emoji: '👍', title: 'Nice Work!' };
+        if (wordCount > 0) return { emoji: '💪', title: 'Good Try!' };
+        return { emoji: '🤔', title: 'Keep Practicing!' };
     }
 };
-
-// Example of a very small dictionary (replace with dictionary.js content)
-// const dictionary = new Set(['BED', 'CAB', 'SAD', 'SEE', 'ACE', 'ADD']);
-// Make sure dictionary.js defines a global 'dictionary' Set object.
