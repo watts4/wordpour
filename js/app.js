@@ -316,36 +316,252 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!sourceFlask || !targetFlask) return;
 
-        // Create animated letter
-        const letterEl = document.createElement('div');
-        letterEl.className = `letter pouring ${letter.isGolden ? 'golden' : ''} ${letter.isRainbow ? 'rainbow' : ''}`;
-        letterEl.textContent = letter.isRainbow ? '★' : letter.char;
-
         const sourceRect = sourceFlask.getBoundingClientRect();
         const targetRect = targetFlask.getBoundingClientRect();
 
-        letterEl.style.left = sourceRect.left + sourceRect.width / 2 - 25 + 'px';
-        letterEl.style.top = sourceRect.top + 30 + 'px';
-        letterEl.style.setProperty('--pour-distance', (targetRect.top - sourceRect.top + 100) + 'px');
+        // Determine pour direction (left or right)
+        const pouringLeft = targetRect.left < sourceRect.left;
 
+        // Apply flask tilt animation
+        sourceFlask.style.transformOrigin = pouringLeft ? 'bottom right' : 'bottom left';
+        sourceFlask.classList.add('pouring-source');
+        targetFlask.classList.add('receiving');
+
+        // Calculate pour path
+        const sourceX = sourceRect.left + sourceRect.width / 2;
+        const sourceY = sourceRect.top + 20;
+        const targetX = targetRect.left + targetRect.width / 2;
+        const targetY = targetRect.top + 60;
+
+        // Create liquid droplets stream (DOM-based for consistent styling)
+        createPourStream(sourceX, sourceY, targetX, targetY, letter);
+
+        // Also use particle system for extra liquid effect
+        const particleColor = letter.isGolden ? '#fbbf24' : letter.isRainbow ? '#a855f7' : '#6366f1';
+        window.particles?.pourStream(sourceX, sourceY, targetX, targetY, { color: particleColor });
+
+        // Create the main letter element that pours
+        const letterEl = document.createElement('div');
+        letterEl.className = `pour-letter ${letter.isGolden ? 'golden' : ''} ${letter.isRainbow ? 'rainbow' : ''}`;
+        letterEl.textContent = letter.isRainbow ? '★' : letter.char;
         document.body.appendChild(letterEl);
 
-        // Add liquid wave effect to target
-        addLiquidWave(targetFlask);
-
-        setTimeout(() => {
+        // Animate letter with physics
+        animateLetterPhysics(letterEl, sourceX, sourceY, targetX, targetY, () => {
+            // On complete - create splash and update
+            createSplash(targetX, targetY, letter);
+            addLiquidWave(targetFlask);
             letterEl.remove();
             renderFlasks(game.flasks);
-        }, 500);
+        });
+
+        // Clean up flask animations
+        setTimeout(() => {
+            sourceFlask.classList.remove('pouring-source');
+            targetFlask.classList.remove('receiving');
+            sourceFlask.style.transformOrigin = '';
+        }, 700);
+    }
+
+    function createPourStream(startX, startY, endX, endY, letter) {
+        const dropletCount = 12;
+        const duration = 500;
+        const colorClass = letter.isGolden ? 'golden' : letter.isRainbow ? 'rainbow' : '';
+
+        for (let i = 0; i < dropletCount; i++) {
+            setTimeout(() => {
+                const droplet = document.createElement('div');
+                droplet.className = `pour-droplet ${colorClass}`;
+                document.body.appendChild(droplet);
+
+                // Random offset for natural look
+                const offsetX = (Math.random() - 0.5) * 20;
+                const offsetY = Math.random() * 10;
+
+                // Animate droplet with physics
+                animateDroplet(droplet, startX + offsetX, startY + offsetY, endX, endY);
+            }, i * 25);
+        }
+    }
+
+    function animateDroplet(droplet, startX, startY, endX, endY) {
+        const duration = 400 + Math.random() * 150;
+        const startTime = performance.now();
+
+        // Physics parameters
+        const gravity = 0.004;
+        const initialVelX = (endX - startX) / duration * 0.7;
+        const initialVelY = -0.3; // Start going up slightly
+
+        function updateDroplet(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            if (progress >= 1) {
+                droplet.remove();
+                return;
+            }
+
+            // Quadratic bezier-like motion with gravity
+            const t = progress;
+            const gravity_effect = gravity * elapsed * elapsed;
+
+            // Horizontal: smooth movement toward target
+            const x = startX + (endX - startX) * easeOutQuad(t) + (Math.random() - 0.5) * 3;
+
+            // Vertical: arc up then accelerate down
+            const arcHeight = -60 * (1 - t);
+            const y = startY + (endY - startY) * t + arcHeight * Math.sin(t * Math.PI) + gravity_effect;
+
+            droplet.style.left = x - 6 + 'px';
+            droplet.style.top = y - 6 + 'px';
+            droplet.style.opacity = 0.8 - progress * 0.3;
+            droplet.style.transform = `scale(${1 - progress * 0.4}) rotate(${progress * 180}deg)`;
+
+            requestAnimationFrame(updateDroplet);
+        }
+
+        requestAnimationFrame(updateDroplet);
+    }
+
+    function animateLetterPhysics(letterEl, startX, startY, endX, endY, onComplete) {
+        const duration = 550;
+        const startTime = performance.now();
+
+        // Start position (slightly above source)
+        letterEl.style.left = startX - 22 + 'px';
+        letterEl.style.top = startY - 22 + 'px';
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            if (progress >= 1) {
+                onComplete();
+                return;
+            }
+
+            // Smooth easing
+            const t = easeInOutCubic(progress);
+
+            // Horizontal movement with slight wobble
+            const wobble = Math.sin(progress * Math.PI * 4) * 5 * (1 - progress);
+            const x = startX + (endX - startX) * t + wobble;
+
+            // Vertical: arc trajectory
+            // Start by going up, then fall with acceleration
+            const arcProgress = progress < 0.3
+                ? -progress / 0.3  // Go up for first 30%
+                : (progress - 0.3) / 0.7;  // Then go down
+
+            const arcHeight = 80;
+            const verticalArc = progress < 0.3
+                ? -arcHeight * easeOutQuad(progress / 0.3)  // Rise up
+                : -arcHeight * (1 - easeInQuad((progress - 0.3) / 0.7));  // Fall down
+
+            const y = startY + (endY - startY) * easeInQuad(progress) + verticalArc;
+
+            // Rotation for tumbling effect
+            const rotation = Math.sin(progress * Math.PI * 2) * 25 * (1 - progress * 0.5);
+
+            // Scale: slight squeeze during fall
+            const scale = 1 + Math.sin(progress * Math.PI) * 0.15;
+
+            letterEl.style.left = x - 22 + 'px';
+            letterEl.style.top = y - 22 + 'px';
+            letterEl.style.transform = `rotate(${rotation}deg) scale(${scale})`;
+
+            requestAnimationFrame(update);
+        }
+
+        requestAnimationFrame(update);
+    }
+
+    function createSplash(x, y, letter) {
+        const splashCount = 8;
+        const colorClass = letter.isGolden ? 'golden' : '';
+
+        for (let i = 0; i < splashCount; i++) {
+            const splash = document.createElement('div');
+            splash.className = `splash-droplet ${colorClass}`;
+            document.body.appendChild(splash);
+
+            const angle = (Math.PI * 2 * i) / splashCount - Math.PI / 2;
+            const velocity = 3 + Math.random() * 4;
+            const velX = Math.cos(angle) * velocity;
+            const velY = Math.sin(angle) * velocity - 2;
+
+            animateSplashDroplet(splash, x, y, velX, velY);
+        }
+
+        // Trigger particle system for splash effect
+        const splashColor = letter.isGolden ? '#fbbf24' : letter.isRainbow ? '#a855f7' : '#6366f1';
+        window.particles?.splash(x, y, { color: splashColor });
+    }
+
+    function animateSplashDroplet(droplet, startX, startY, velX, velY) {
+        const duration = 400;
+        const startTime = performance.now();
+        const gravity = 0.015;
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            if (progress >= 1) {
+                droplet.remove();
+                return;
+            }
+
+            const x = startX + velX * elapsed * 0.1;
+            const y = startY + velY * elapsed * 0.1 + gravity * elapsed * elapsed * 0.01;
+
+            droplet.style.left = x - 4 + 'px';
+            droplet.style.top = y - 4 + 'px';
+            droplet.style.opacity = 1 - progress;
+            droplet.style.transform = `scale(${1 - progress * 0.5})`;
+
+            requestAnimationFrame(update);
+        }
+
+        requestAnimationFrame(update);
+    }
+
+    // Easing functions
+    function easeOutQuad(t) {
+        return t * (2 - t);
+    }
+
+    function easeInQuad(t) {
+        return t * t;
+    }
+
+    function easeInOutCubic(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
 
     function addLiquidWave(flask) {
         const body = flask.querySelector('.flask-body');
+        if (!body) return;
+
         const wave = document.createElement('div');
         wave.className = 'liquid-wave';
         body.appendChild(wave);
 
-        setTimeout(() => wave.remove(), 1000);
+        // Add bubbles
+        for (let i = 0; i < 4; i++) {
+            setTimeout(() => {
+                const bubble = document.createElement('div');
+                bubble.className = 'pour-bubble';
+                bubble.style.left = 20 + Math.random() * 60 + '%';
+                bubble.style.bottom = '10px';
+                bubble.style.animation = `bubbleUp 0.6s ease-out forwards`;
+                body.appendChild(bubble);
+                setTimeout(() => bubble.remove(), 600);
+            }, i * 80);
+        }
+
+        setTimeout(() => wave.remove(), 800);
     }
 
     // ==================== SCORING ====================

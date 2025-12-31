@@ -197,6 +197,70 @@ class ParticleSystem {
         }
     }
 
+    // Pour stream effect - liquid droplets flowing between points
+    pourStream(startX, startY, endX, endY, options = {}) {
+        const {
+            color = '#6366f1',
+            count = 15,
+            duration = 400
+        } = options;
+
+        const colors = [color, '#818cf8', '#a5b4fc'];
+
+        for (let i = 0; i < count; i++) {
+            setTimeout(() => {
+                // Create droplet particle
+                const offsetX = (Math.random() - 0.5) * 15;
+                const offsetY = Math.random() * 8;
+
+                this.particles.push(this.createParticle(
+                    startX + offsetX,
+                    startY + offsetY,
+                    {
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        size: 4 + Math.random() * 4,
+                        speedX: (endX - startX) / 40 + (Math.random() - 0.5) * 2,
+                        speedY: -3 + Math.random() * 2,
+                        gravity: 0.25,
+                        friction: 0.99,
+                        decay: 0.025,
+                        shape: 'circle'
+                    }
+                ));
+            }, i * (duration / count));
+        }
+
+        if (!this.isRunning) {
+            this.start();
+        }
+    }
+
+    // Splash effect when letter lands
+    splash(x, y, options = {}) {
+        const { color = '#6366f1', count = 12 } = options;
+        const colors = [color, '#818cf8', '#a5b4fc', '#c7d2fe'];
+
+        for (let i = 0; i < count; i++) {
+            const angle = (Math.PI * 2 * i) / count - Math.PI / 2;
+            const speed = 2 + Math.random() * 4;
+
+            this.particles.push(this.createParticle(x, y, {
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: 3 + Math.random() * 3,
+                speedX: Math.cos(angle) * speed,
+                speedY: Math.sin(angle) * speed - 1,
+                gravity: 0.15,
+                friction: 0.97,
+                decay: 0.035,
+                shape: 'circle'
+            }));
+        }
+
+        if (!this.isRunning) {
+            this.start();
+        }
+    }
+
     // Update and draw particles
     update() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
