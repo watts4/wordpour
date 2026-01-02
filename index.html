@@ -60,20 +60,20 @@
                     <button class="mode-card" data-mode="zen">
                         <div class="mode-icon">🧘</div>
                         <h3>Zen Mode</h3>
-                        <p>No timer. Pure relaxation.</p>
+                        <p>No timer. Strategic relaxation.</p>
                         <div class="mode-tag tag-chill">Chill</div>
                     </button>
                     <button class="mode-card featured" data-mode="blitz">
                         <div class="mode-icon">⚡</div>
                         <h3>Blitz Mode</h3>
-                        <p>60 seconds of intensity!</p>
+                        <p>60 seconds. Limited attempts!</p>
                         <div class="mode-tag tag-popular">Popular</div>
                     </button>
                     <button class="mode-card" data-mode="challenge">
                         <div class="mode-icon">🎯</div>
                         <h3>Challenge</h3>
-                        <p>Beat the target score!</p>
-                        <div class="mode-tag tag-new">New!</div>
+                        <p>Beat targets with strategy!</p>
+                        <div class="mode-tag tag-new">Strategic</div>
                     </button>
                 </div>
             </div>
@@ -106,30 +106,36 @@
                     <div class="step-number">1</div>
                     <div class="step-content">
                         <h3>Pour Letters</h3>
-                        <p>Drag one flask onto another to pour letters between them.</p>
+                        <p>Drag one flask onto another to pour letters between them. Plan carefully!</p>
                     </div>
                 </div>
                 <div class="tutorial-step">
                     <div class="step-number">2</div>
                     <div class="step-content">
-                        <h3>Form Words</h3>
-                        <p>Stack letters to spell words from bottom to top!</p>
+                        <h3>Form Words (3+ letters)</h3>
+                        <p>Stack letters to spell words from bottom to top. Minimum 3 letters!</p>
                     </div>
                 </div>
                 <div class="tutorial-step">
                     <div class="step-number">3</div>
                     <div class="step-content">
-                        <h3>Build Combos</h3>
-                        <p>Find multiple words quickly for combo multipliers!</p>
+                        <h3>Limited Attempts</h3>
+                        <p>You start with 5 scoring attempts. Finding words adds +1 attempt back. No words = -1 attempt!</p>
                     </div>
                 </div>
                 <div class="tutorial-step">
                     <div class="step-number">4</div>
                     <div class="step-content">
+                        <h3>Earn More Letters</h3>
+                        <p>Each time you find words, you earn 2 new letters! Build strategically to keep playing!</p>
+                    </div>
+                </div>
+                <div class="tutorial-step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
                         <h3>Special Letters</h3>
                         <p>
                             <span class="letter-demo golden">★ Golden</span> = 2x points!
-                            <span class="letter-demo rainbow">✦ Rainbow</span> = Any letter!
                         </p>
                     </div>
                 </div>
@@ -147,6 +153,10 @@
                 <div class="stat-item score-stat">
                     <span class="stat-label">Score</span>
                     <span class="stat-value" id="currentScore">0</span>
+                </div>
+                <div class="stat-item attempts-stat" id="attemptsContainer">
+                    <span class="stat-label">Attempts</span>
+                    <span class="stat-value" id="attemptsCount">5</span>
                 </div>
                 <div class="stat-item combo-stat" id="comboContainer">
                     <span class="stat-label">Combo</span>

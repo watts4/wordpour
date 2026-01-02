@@ -21,7 +21,7 @@ const config = {
 
     // Bonuses
     goldenLetterMultiplier: 2,
-    rainbowLetterChance: 0.05, // 5% chance for a rainbow letter
+    rainbowLetterChance: 0, // Rainbow letters disabled for strategic gameplay
 
     // Word length bonuses
     wordLengthBonus: {
@@ -61,7 +61,7 @@ const config = {
     letterPool: "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOOPPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ",
 
     // Generate initial letters
-    generateLetters: function(count = 20) {
+    generateLetters: function(count = 8) {
         const pool = this.letterPool.split('');
         const letters = [];
 
@@ -91,7 +91,7 @@ const config = {
     },
 
     // Generate initial game state
-    generateInitialState: function(letterCount = 20) {
+    generateInitialState: function(letterCount = 8) {
         const letters = this.generateLetters(letterCount);
         return this.distributeLetters(letters, this.flaskCount);
     },

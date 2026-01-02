@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Game
         backToMenu: document.getElementById('backToMenu'),
         currentScore: document.getElementById('currentScore'),
+        attemptsCount: document.getElementById('attemptsCount'),
+        attemptsContainer: document.getElementById('attemptsContainer'),
         comboCount: document.getElementById('comboCount'),
         comboContainer: document.getElementById('comboContainer'),
         gameTimer: document.getElementById('gameTimer'),
@@ -568,6 +570,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleSubmit() {
         const result = game.submitScore();
 
+        if (result.noAttemptsLeft) {
+            showToast('No attempts remaining!', 'error');
+            return;
+        }
+
         if (result.words.length > 0) {
             // Play sound
             if (result.words.some(w => w.length >= 5)) {
@@ -597,13 +604,17 @@ document.addEventListener('DOMContentLoaded', () => {
             updateScoreDisplay(result.totalScore);
             updateComboDisplay(result.combo);
 
+            // Show message about earning letters
+            showToast(`+${result.words.length} word${result.words.length > 1 ? 's' : ''} found! +2 new letters earned!`, 'success', 2000);
+
             // Screen shake for big scores
             if (result.newScore >= 50) {
                 document.body.classList.add('screen-shake');
                 setTimeout(() => document.body.classList.remove('screen-shake'), 400);
             }
         } else {
-            showToast('No new words found!', 'info');
+            showToast(`No new words found! -1 attempt (${result.attemptsRemaining} left)`, 'warning', 2500);
+            window.audio?.error();
         }
     }
 
@@ -651,6 +662,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (combo > 0) {
             elements.comboContainer.classList.add('active');
+        }
+    }
+
+    function updateAttemptsDisplay(attempts) {
+        elements.attemptsCount.textContent = attempts;
+
+        // Visual warning states
+        elements.attemptsContainer.classList.remove('warning', 'danger');
+        if (attempts <= 0) {
+            elements.attemptsContainer.classList.add('danger');
+        } else if (attempts <= 2) {
+            elements.attemptsContainer.classList.add('danger');
+        } else if (attempts <= 3) {
+            elements.attemptsContainer.classList.add('warning');
         }
     }
 
@@ -737,6 +762,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.wordsList.innerHTML = '';
         elements.currentScore.textContent = '0';
         elements.comboCount.textContent = '1x';
+        elements.attemptsCount.textContent = state.scoringAttemptsRemaining || 5;
 
         // Show/hide challenge bar
         if (mode === 'challenge') {
@@ -764,6 +790,7 @@ document.addEventListener('DOMContentLoaded', () => {
         game.onTimeUpdate = updateTimerDisplay;
         game.onScoreUpdate = updateScoreDisplay;
         game.onComboUpdate = updateComboDisplay;
+        game.onAttemptsUpdate = updateAttemptsDisplay;
         game.onFlaskUpdate = renderFlasks;
         game.onGameEnd = handleGameEnd;
         game.onLevelComplete = handleLevelComplete;

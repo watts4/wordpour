@@ -764,6 +764,21 @@ body {
     animation: timerPulse 0.3s ease infinite;
 }
 
+.attempts-stat .stat-value {
+    color: var(--success);
+}
+
+.attempts-stat.warning .stat-value {
+    color: var(--warning);
+    animation: timerPulse 0.5s ease infinite;
+}
+
+.attempts-stat.danger .stat-value {
+    color: var(--danger);
+    animation: timerPulse 0.3s ease infinite;
+    font-weight: 800;
+}
+
 @keyframes timerPulse {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(1.1); }
