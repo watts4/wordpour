@@ -21,6 +21,10 @@ class WordPourGame {
         // Challenge mode
         this.challengeLevel = 1;
 
+        // Strategic gameplay mechanics
+        this.scoringAttemptsRemaining = 5;
+        this.maxScoringAttempts = 10;
+
         // Power-ups
         this.powerups = { ...config.powerups };
 
@@ -40,6 +44,7 @@ class WordPourGame {
         this.onGameEnd = null;
         this.onFlaskUpdate = null;
         this.onLevelComplete = null;
+        this.onAttemptsUpdate = null;
     }
 
     // Generate unique ID
@@ -60,6 +65,9 @@ class WordPourGame {
         this.isFrozen = false;
         this.history = [];
 
+        // Reset strategic gameplay mechanics
+        this.scoringAttemptsRemaining = 5;
+
         // Reset power-ups
         this.powerups = { ...config.powerups };
 
@@ -74,8 +82,8 @@ class WordPourGame {
 
         // Generate letters
         const letterCount = mode === 'challenge'
-            ? config.challengeLevels[this.challengeLevel - 1]?.letters || 20
-            : 20;
+            ? config.challengeLevels[this.challengeLevel - 1]?.letters || 8
+            : 8;
 
         this.generateFlasks(letterCount);
 
@@ -128,6 +136,36 @@ class WordPourGame {
                 this.rainbowLetterIds.push(letter.id);
             }
         });
+    }
+
+    // Add new letters to the game (earned by finding words)
+    addNewLetters(count) {
+        const newLetters = config.generateLetters(count);
+
+        newLetters.forEach(char => {
+            // Find flasks that aren't full
+            const availableFlasks = this.flasks.filter(f => f.letters.length < config.maxFlaskHeight);
+
+            if (availableFlasks.length > 0) {
+                // Randomly select a non-full flask
+                const targetFlask = availableFlasks[Math.floor(Math.random() * availableFlasks.length)];
+
+                const letterObj = {
+                    id: this.generateId(),
+                    char: char.toUpperCase(),
+                    score: config.scrabbleScores[char.toUpperCase()] || 0,
+                    isGolden: false,
+                    isRainbow: false
+                };
+
+                targetFlask.letters.push(letterObj);
+            }
+        });
+
+        // Update UI
+        if (this.onFlaskUpdate) {
+            this.onFlaskUpdate(this.flasks);
+        }
     }
 
     // Start the game timer
@@ -239,11 +277,11 @@ class WordPourGame {
         const words = [];
         const letters = flask.letters;
 
-        if (letters.length < 2) return words;
+        if (letters.length < 3) return words;
 
-        // Check all possible consecutive sequences
+        // Check all possible consecutive sequences (minimum 3 letters)
         for (let start = 0; start < letters.length; start++) {
-            for (let end = start + 2; end <= letters.length; end++) {
+            for (let end = start + 3; end <= letters.length; end++) {
                 const sequence = letters.slice(start, end);
                 const word = sequence.map(l => l.isRainbow ? '*' : l.char).join('');
 
@@ -315,6 +353,18 @@ class WordPourGame {
 
     // Calculate and submit score
     submitScore() {
+        // Check if attempts remaining
+        if (this.scoringAttemptsRemaining <= 0) {
+            return {
+                words: [],
+                newScore: 0,
+                totalScore: this.score,
+                combo: this.combo,
+                attemptsRemaining: 0,
+                noAttemptsLeft: true
+            };
+        }
+
         const allWords = [];
         let totalNewScore = 0;
 
@@ -331,6 +381,12 @@ class WordPourGame {
         });
 
         if (allWords.length > 0) {
+            // Success! Add 1 attempt back (capped at max)
+            this.scoringAttemptsRemaining = Math.min(
+                this.scoringAttemptsRemaining + 1,
+                this.maxScoringAttempts
+            );
+
             // Update combo
             const now = Date.now();
             if (now - this.lastWordTime < config.comboTimeWindow) {
@@ -348,6 +404,9 @@ class WordPourGame {
             // Update score
             this.score += totalNewScore;
 
+            // Earn new letters! (2 letters per successful score)
+            this.addNewLetters(2);
+
             // Callbacks
             if (this.onWordFound) {
                 this.onWordFound(allWords, totalNewScore, this.combo);
@@ -358,6 +417,9 @@ class WordPourGame {
             if (this.onComboUpdate) {
                 this.onComboUpdate(this.combo);
             }
+            if (this.onAttemptsUpdate) {
+                this.onAttemptsUpdate(this.scoringAttemptsRemaining);
+            }
 
             // Check challenge mode completion
             if (this.mode === 'challenge') {
@@ -366,13 +428,26 @@ class WordPourGame {
                     this.levelComplete();
                 }
             }
+        } else {
+            // No words found - penalty: lose 1 attempt permanently
+            this.scoringAttemptsRemaining--;
+
+            if (this.onAttemptsUpdate) {
+                this.onAttemptsUpdate(this.scoringAttemptsRemaining);
+            }
+
+            // End game if no attempts left
+            if (this.scoringAttemptsRemaining <= 0) {
+                setTimeout(() => this.endGame(), 500);
+            }
         }
 
         return {
             words: allWords,
             newScore: totalNewScore,
             totalScore: this.score,
-            combo: this.combo
+            combo: this.combo,
+            attemptsRemaining: this.scoringAttemptsRemaining
         };
     }
 
@@ -515,7 +590,8 @@ class WordPourGame {
             isPaused: this.isPaused,
             isFrozen: this.isFrozen,
             powerups: { ...this.powerups },
-            challengeLevel: this.challengeLevel
+            challengeLevel: this.challengeLevel,
+            scoringAttemptsRemaining: this.scoringAttemptsRemaining
         };
     }
 
