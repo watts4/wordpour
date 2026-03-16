@@ -847,15 +847,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==================== FIREBASE INTEGRATION ====================
     async function saveScore(name, score) {
         try {
+            // Client-side validation to match Firestore security rules
+            const sanitizedName = String(name).trim().substring(0, 15);
+            if (!sanitizedName) {
+                showToast('Please enter a valid name!', 'warning');
+                return false;
+            }
+
+            const sanitizedScore = Math.max(0, Math.min(10000, Math.floor(Number(score) || 0)));
+            const wordsCreated = Math.max(0, Math.floor(Number(lastGameResult?.wordCount) || 0));
+            const wordsList = (lastGameResult?.wordsFound || []).slice(0, 100);
+            const mode = ['zen', 'blitz', 'challenge'].includes(currentMode) ? currentMode : 'blitz';
+
             const { collection, addDoc } = window.firestoreModules;
             const db = window.db;
 
             await addDoc(collection(db, "highScores"), {
-                name: name,
-                score: score,
-                wordsCreated: lastGameResult?.wordCount || 0,
-                wordsList: lastGameResult?.wordsFound || [],
-                mode: currentMode,
+                name: sanitizedName,
+                score: sanitizedScore,
+                wordsCreated: wordsCreated,
+                wordsList: wordsList,
+                mode: mode,
                 timestamp: new Date().toISOString()
             });
 
