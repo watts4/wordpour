@@ -326,10 +326,46 @@ class WordPourGame {
         return words;
     }
 
-    // Expand rainbow wildcards to all possible letters
+    // Expand rainbow wildcards using trie-based pruning for O(trie) instead of O(26^k)
     expandRainbow(word) {
         if (!word.includes('*')) return [word];
 
+        const trie = window.dictionaryTrie;
+        if (!trie) {
+            // Fallback: brute-force expansion if trie not available
+            return this._expandRainbowBruteForce(word);
+        }
+
+        const results = [];
+        const chars = word.split('');
+
+        const walk = (node, index, built) => {
+            if (index === chars.length) {
+                if (node['$']) results.push(built);
+                return;
+            }
+
+            if (chars[index] === '*') {
+                // Wildcard: try every child in the trie at this position
+                for (const ch in node) {
+                    if (ch === '$') continue;
+                    walk(node[ch], index + 1, built + ch);
+                }
+            } else {
+                // Fixed letter: only follow matching branch
+                const ch = chars[index];
+                if (node[ch]) {
+                    walk(node[ch], index + 1, built + ch);
+                }
+            }
+        };
+
+        walk(trie, 0, '');
+        return results;
+    }
+
+    // Brute-force fallback if trie is unavailable
+    _expandRainbowBruteForce(word) {
         const results = [];
         const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
