@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // High scores collection — publicly readable, validated writes
+    match /highScores/{document} {
+      // Anyone can read leaderboard entries
+      allow read: if true;
+
+      // Allow creating a score with field validation
+      allow create: if
+        // Must contain exactly the expected fields
+        request.resource.data.keys().hasAll(['name', 'score', 'wordsCreated', 'wordsList', 'mode', 'timestamp']) &&
+        request.resource.data.keys().size() == 6 &&
+
+        // name: non-empty string, max 15 chars
+        request.resource.data.name is string &&
+        request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 15 &&
+
+        // score: integer in valid range
+        request.resource.data.score is int &&
+        request.resource.data.score >= 0 &&
+        request.resource.data.score <= 10000 &&
+
+        // wordsCreated: non-negative integer
+        request.resource.data.wordsCreated is int &&
+        request.resource.data.wordsCreated >= 0 &&
+
+        // wordsList: must be a list, max 100 entries
+        request.resource.data.wordsList is list &&
+        request.resource.data.wordsList.size() <= 100 &&
+
+        // mode: must be one of the valid game modes
+        request.resource.data.mode in ['zen', 'blitz', 'challenge'] &&
+
+        // timestamp: must be a string (ISO format)
+        request.resource.data.timestamp is string &&
+        request.resource.data.timestamp.size() <= 30;
+
+      // No updates or deletes from clients
+      allow update, delete: if false;
+    }
+
+    // Deny all access to any other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
