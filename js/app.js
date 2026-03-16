@@ -106,6 +106,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ==================== SANITIZATION ====================
+    function escapeHTML(str) {
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return String(str).replace(/[&<>"']/g, c => map[c]);
+    }
+
     // ==================== TOAST NOTIFICATIONS ====================
     function showToast(message, type = 'info', duration = 3000) {
         const toast = document.createElement('div');
@@ -120,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         toast.innerHTML = `
             <span class="toast-icon">${icons[type] || icons.info}</span>
-            <span class="toast-message">${message}</span>
+            <span class="toast-message">${escapeHTML(message)}</span>
         `;
 
         elements.toastContainer.appendChild(toast);
@@ -907,10 +913,10 @@ document.addEventListener('DOMContentLoaded', () => {
             place.className = `podium-place ${actualPosition}`;
             place.innerHTML = `
                 <div class="podium-avatar">
-                    ${entry.name?.charAt(0).toUpperCase() || '?'}
+                    ${escapeHTML(entry.name?.charAt(0).toUpperCase() || '?')}
                     <div class="podium-rank">${rank}</div>
                 </div>
-                <div class="podium-name">${entry.name || 'Anonymous'}</div>
+                <div class="podium-name">${escapeHTML(entry.name || 'Anonymous')}</div>
                 <div class="podium-score">${entry.score}</div>
                 <div class="podium-stand"></div>
             `;
@@ -925,9 +931,9 @@ document.addEventListener('DOMContentLoaded', () => {
             el.className = 'leaderboard-entry';
             el.innerHTML = `
                 <div class="entry-rank">${index + 4}</div>
-                <div class="entry-avatar">${entry.name?.charAt(0).toUpperCase() || '?'}</div>
+                <div class="entry-avatar">${escapeHTML(entry.name?.charAt(0).toUpperCase() || '?')}</div>
                 <div class="entry-info">
-                    <div class="entry-name">${entry.name || 'Anonymous'}</div>
+                    <div class="entry-name">${escapeHTML(entry.name || 'Anonymous')}</div>
                     <div class="entry-words">${entry.wordsCreated || 0} words</div>
                 </div>
                 <div class="entry-score">${entry.score}</div>
