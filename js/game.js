@@ -64,6 +64,7 @@ class WordPourGame {
         this.isPaused = false;
         this.isFrozen = false;
         this.history = [];
+        this.challengeLevel = 1;
 
         // Reset strategic gameplay mechanics
         this.scoringAttemptsRemaining = 5;
@@ -542,7 +543,7 @@ class WordPourGame {
 
         this.isFrozen = true;
 
-        setTimeout(() => {
+        this.freezeTimeout = setTimeout(() => {
             this.isFrozen = false;
         }, 10000); // 10 second freeze
 
@@ -553,6 +554,10 @@ class WordPourGame {
     endGame(victory = false) {
         this.isPlaying = false;
         this.stopTimer();
+        if (this.freezeTimeout) {
+            clearTimeout(this.freezeTimeout);
+            this.freezeTimeout = null;
+        }
 
         // Find longest word
         const longestWord = this.wordsFound.reduce((longest, word) =>
