@@ -392,9 +392,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Physics parameters
         const gravity = 0.004;
-        const initialVelX = (endX - startX) / duration * 0.7;
-        const initialVelY = -0.3; // Start going up slightly
-
         function updateDroplet(currentTime) {
             const elapsed = currentTime - startTime;
             const progress = Math.min(elapsed / duration, 1);
