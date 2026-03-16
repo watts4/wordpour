@@ -628,4 +628,17 @@ const wordList = [
 
 // Create a Set from the word list, all uppercase for case-insensitive matching
 window.dictionary = new Set(wordList);
-//const dictionary = new Set(wordList.map(word => word.toUpperCase()));
+
+// Build a trie from the dictionary for efficient wildcard lookups
+(function buildTrie() {
+    const root = {};
+    for (const word of wordList) {
+        let node = root;
+        for (const ch of word) {
+            if (!node[ch]) node[ch] = {};
+            node = node[ch];
+        }
+        node['$'] = true; // end-of-word marker
+    }
+    window.dictionaryTrie = root;
+})();
