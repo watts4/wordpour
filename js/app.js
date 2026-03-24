@@ -85,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentMode = 'blitz';
     let draggedFlask = null;
     let lastGameResult = null;
+    let scoreSaved = false;
 
     // ==================== SCREEN MANAGEMENT ====================
     function showScreen(screenId) {
@@ -803,6 +804,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function handleGameEnd(result) {
         lastGameResult = result;
+        scoreSaved = false;
+        elements.saveScoreBtn.disabled = false;
 
         // Play sound
         if (result.victory || result.score >= 100) {
@@ -905,9 +908,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function showLeaderboardLoading() {
+        elements.podium.innerHTML = '<div class="leaderboard-loading">Loading...</div>';
+        elements.leaderboardListContent.innerHTML = '<div class="leaderboard-loading">Loading...</div>';
+    }
+
     function renderLeaderboard(data) {
         // Render podium (top 3)
         elements.podium.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            elements.podium.innerHTML = '<div class="leaderboard-empty">No scores yet!</div>';
+            elements.leaderboardListContent.innerHTML = '';
+            return;
+        }
 
         const positions = ['second', 'first', 'third'];
         const topThree = data.slice(0, 3);
@@ -1009,6 +1023,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Results screen
     elements.saveScoreBtn.addEventListener('click', async () => {
+        if (scoreSaved) return;
+
         const name = elements.playerNameInput.value.trim();
         if (!name) {
             showToast('Please enter your name!', 'warning');
@@ -1017,10 +1033,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         elements.saveScoreBtn.disabled = true;
         const success = await saveScore(name, lastGameResult?.score || 0);
-        elements.saveScoreBtn.disabled = false;
 
         if (success) {
+            scoreSaved = true;
             elements.playerNameInput.value = '';
+        } else {
+            elements.saveScoreBtn.disabled = false;
         }
     });
 
@@ -1030,6 +1048,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     elements.viewLeaderboardFromResults.addEventListener('click', async () => {
         showScreen('leaderboardScreen');
+        showLeaderboardLoading();
         const data = await loadLeaderboard();
         renderLeaderboard(data);
     });
@@ -1041,6 +1060,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Leaderboard screen
     elements.viewLeaderboardBtn.addEventListener('click', async () => {
         showScreen('leaderboardScreen');
+        showLeaderboardLoading();
         const data = await loadLeaderboard();
         renderLeaderboard(data);
     });
