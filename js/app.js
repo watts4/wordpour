@@ -908,9 +908,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function showLeaderboardLoading() {
+        elements.podium.innerHTML = '<div class="leaderboard-loading">Loading...</div>';
+        elements.leaderboardListContent.innerHTML = '<div class="leaderboard-loading">Loading...</div>';
+    }
+
     function renderLeaderboard(data) {
         // Render podium (top 3)
         elements.podium.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            elements.podium.innerHTML = '<div class="leaderboard-empty">No scores yet!</div>';
+            elements.leaderboardListContent.innerHTML = '';
+            return;
+        }
 
         const positions = ['second', 'first', 'third'];
         const topThree = data.slice(0, 3);
@@ -1037,6 +1048,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     elements.viewLeaderboardFromResults.addEventListener('click', async () => {
         showScreen('leaderboardScreen');
+        showLeaderboardLoading();
         const data = await loadLeaderboard();
         renderLeaderboard(data);
     });
@@ -1048,6 +1060,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Leaderboard screen
     elements.viewLeaderboardBtn.addEventListener('click', async () => {
         showScreen('leaderboardScreen');
+        showLeaderboardLoading();
         const data = await loadLeaderboard();
         renderLeaderboard(data);
     });
