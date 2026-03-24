@@ -456,10 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Vertical: arc trajectory
             // Start by going up, then fall with acceleration
-            const arcProgress = progress < 0.3
-                ? -progress / 0.3  // Go up for first 30%
-                : (progress - 0.3) / 0.7;  // Then go down
-
             const arcHeight = 80;
             const verticalArc = progress < 0.3
                 ? -arcHeight * easeOutQuad(progress / 0.3)  // Rise up
@@ -674,9 +670,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Visual warning states
         elements.attemptsContainer.classList.remove('warning', 'danger');
-        if (attempts <= 0) {
-            elements.attemptsContainer.classList.add('danger');
-        } else if (attempts <= 2) {
+        if (attempts <= 2) {
             elements.attemptsContainer.classList.add('danger');
         } else if (attempts <= 3) {
             elements.attemptsContainer.classList.add('warning');
