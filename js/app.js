@@ -636,10 +636,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function addWordChip(wordData) {
         const chip = document.createElement('div');
         chip.className = 'word-chip';
-        chip.innerHTML = `
-            ${wordData.word}
-            <span class="word-score">+${wordData.score}</span>
-        `;
+        chip.appendChild(document.createTextNode(wordData.word + ' '));
+        const scoreSpan = document.createElement('span');
+        scoreSpan.className = 'word-score';
+        scoreSpan.textContent = `+${wordData.score}`;
+        chip.appendChild(scoreSpan);
         elements.wordsList.appendChild(chip);
     }
 
