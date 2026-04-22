@@ -241,7 +241,8 @@ class WordPourGame {
                 letters: flask.letters.map(l => ({ ...l }))
             })),
             score: this.score,
-            combo: this.combo
+            combo: this.combo,
+            wordsFound: [...this.wordsFound]
         };
 
         this.history.push(state);
@@ -259,6 +260,9 @@ class WordPourGame {
         this.flasks = state.flasks;
         this.score = state.score;
         this.combo = state.combo;
+        if (state.wordsFound) {
+            this.wordsFound = [...state.wordsFound];
+        }
 
         if (this.onFlaskUpdate) {
             this.onFlaskUpdate(this.flasks);
