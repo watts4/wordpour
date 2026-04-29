@@ -1076,6 +1076,9 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.targetScore.textContent = config.challengeLevels[game.challengeLevel - 1]?.target || 50;
         elements.challengeProgress.style.width = '0%';
         elements.wordsList.innerHTML = '';
+        updateScoreDisplay(game.score);
+        updateComboDisplay(game.combo);
+        elements.comboContainer.classList.remove('active');
         updatePowerupDisplay();
     });
 
