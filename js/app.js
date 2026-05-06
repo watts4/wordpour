@@ -918,7 +918,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const positions = ['second', 'first', 'third'];
         const topThree = data.slice(0, 3);
 
         // Reorder for visual display: 2nd, 1st, 3rd
